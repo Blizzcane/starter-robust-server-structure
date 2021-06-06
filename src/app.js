@@ -1,29 +1,15 @@
 const express = require("express");
 const app = express();
 const flipsRouter = require("./flips/flips.router");
+const countsRouter = require("./flips/flips.router");
 
 const flips = require("./data/flips-data");
 const counts = require("./data/counts-data");
 
 app.use(express.json());
-
-app.use("/counts/:countId", (request, response, next) => {
-  const { countId } = request.params;
-  const foundCount = counts[countId];
-
-  if (foundCount === undefined) {
-    next({ status: 404, message: `Count id not found: ${countId}` });
-  } else {
-    response.json({ data: foundCount });
-  }
-});
-
-app.use("/counts", (request, response) => {
-  response.json({ data: counts });
-});
-
  
 app.use("/flips", flipsRouter);
+app.use("/counts", countsRouter);
 
 
 

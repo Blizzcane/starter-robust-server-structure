@@ -5,6 +5,7 @@ function flipExists(req, res, next) {
   const { flipId } = req.params;
   const foundFlip = flips.find((flip) => flip.id === Number(flipId));
   if (foundFlip) {
+    res.locals.flip = foundFlip;
     return next();
   }
   next({
@@ -13,10 +14,8 @@ function flipExists(req, res, next) {
   });
 }
 
-function read(req, res) {
-  const { flipId } = req.params;
-  const foundFlip = flips.find((flip) => flip.id === Number(flipId));
-  res.json({ data: foundFlip });
+function read(req, res) { 
+  res.json({ data: res.locals.flip });
 }
 
 let lastFlipId = flips.reduce((maxId, flip) => Math.max(maxId, flip.id), 0);
@@ -59,22 +58,32 @@ function list(req, res) {
   res.json({ data: flips });
 }
 
-function update(req, res) {
+function update(req, res) { 
+    const flip = res.locals.flip;
+    const originalResult = flip.result;
+    const { data: { result } = {} } = req.body;
+
+    if (originalResult !== result) {
+      // update the flip
+      flip.result = result;
+      // Adjust the counts
+      counts[originalResult] = counts[originalResult] - 1;
+      counts[result] = counts[result] + 1;
+    }
+
+    res.json({ data: flip });
+}
+
+function destroy(req, res) {
   const { flipId } = req.params;
-  const foundFlip = flips.find((flip) => flip.id === Number(flipId));
-
-  const originalResult = foundFlip.result;
-  const { data: { result } = {} } = req.body;
-
-  if (originalResult !== result) {
-    // update the flip
-    foundFlip.result = result;
-    // Adjust the counts
-    counts[originalResult] = counts[originalResult] - 1;
-    counts[result] = counts[result] + 1;
-  }
-
-  res.json({ data: foundFlip });
+  const index = flips.findIndex((flip) => flip.id === Number(flipId));
+  // splice returns an array of the deleted elements, even if it is one element
+  const deletedFlip = flips.splice(index, 1);
+  deletedFlip.forEach(
+    (deletedFlip) =>
+      (counts[deletedFlip.result] = counts[deletedFlip.result] - 1)
+  );
+  res.sendStatus(204);
 }
 
 module.exports = {
@@ -82,4 +91,5 @@ module.exports = {
   list,
   read: [flipExists, read],
   update: [flipExists, bodyHasResultProperty, resultPropertyIsValid, update],
+  delete: [flipExists, destroy]
 };
