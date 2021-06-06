@@ -14,7 +14,7 @@ function flipExists(req, res, next) {
   });
 }
 
-function read(req, res) { 
+function read(req, res) {
   res.json({ data: res.locals.flip });
 }
 
@@ -56,24 +56,24 @@ function create(req, res) {
 
 function list(req, res) {
   const { countId } = req.params;
-  const byResult = countId ? flip => flip.result === countId : () => true;
+  const byResult = countId ? (flip) => flip.result === countId : () => true;
   res.json({ data: flips.filter(byResult) });
-};
+}
 
-function update(req, res) { 
-    const flip = res.locals.flip;
-    const originalResult = flip.result;
-    const { data: { result } = {} } = req.body;
+function update(req, res) {
+  const flip = res.locals.flip;
+  const originalResult = flip.result;
+  const { data: { result } = {} } = req.body;
 
-    if (originalResult !== result) {
-      // update the flip
-      flip.result = result;
-      // Adjust the counts
-      counts[originalResult] = counts[originalResult] - 1;
-      counts[result] = counts[result] + 1;
-    }
+  if (originalResult !== result) {
+    // update the flip
+    flip.result = result;
+    // Adjust the counts
+    counts[originalResult] = counts[originalResult] - 1;
+    counts[result] = counts[result] + 1;
+  }
 
-    res.json({ data: flip });
+  res.json({ data: flip });
 }
 
 function destroy(req, res) {
@@ -93,5 +93,5 @@ module.exports = {
   list,
   read: [flipExists, read],
   update: [flipExists, bodyHasResultProperty, resultPropertyIsValid, update],
-  delete: [flipExists, destroy]
+  delete: [flipExists, destroy],
 };
